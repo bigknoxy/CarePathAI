@@ -1,0 +1,11 @@
+{
+  "id": 1,
+  "firstName": "Priya",
+  "lastName": "Patel",
+  "dateOfBirth": "1966-02-13",
+  "medicalRecordNumber": "MRN001",
+  "conditions": [
+    "pregnancy"
+  ],
+  "notes": "Patient has a history of pregnancy. Symptoms include ..."
+}

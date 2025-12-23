@@ -1,0 +1,12 @@
+{
+  "id": 7,
+  "firstName": "Alex",
+  "lastName": "Patel",
+  "dateOfBirth": "1954-11-22",
+  "medicalRecordNumber": "MRN007",
+  "conditions": [
+    "asthma",
+    "pregnancy"
+  ],
+  "notes": "Patient has a history of asthma. Symptoms include ...\nPatient has a history of pregnancy. Symptoms include ..."
+}

@@ -1,0 +1,11 @@
+{
+  "id": 35,
+  "firstName": "Priya",
+  "lastName": "Patel",
+  "dateOfBirth": "1962-08-29",
+  "medicalRecordNumber": "MRN035",
+  "conditions": [
+    "hypertension"
+  ],
+  "notes": "Patient has a history of hypertension. Symptoms include ..."
+}

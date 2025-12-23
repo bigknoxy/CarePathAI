@@ -1,0 +1,11 @@
+{
+  "id": 52,
+  "firstName": "Wei",
+  "lastName": "Doe",
+  "dateOfBirth": "1958-11-26",
+  "medicalRecordNumber": "MRN052",
+  "conditions": [
+    "depression"
+  ],
+  "notes": "Patient has a history of depression. Symptoms include ..."
+}

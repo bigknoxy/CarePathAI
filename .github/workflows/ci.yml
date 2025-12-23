@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-ml:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Build ML service image
+      run: |
+        docker-compose build ml
+    
+    - name: Run ML tests in container
+      run: |
+        docker run --rm \
+          -v $(pwd)/carepath_ml:/app \
+          -v $(pwd)/ml_cache:/cache \
+          -e TRANSFORMERS_CACHE=/cache \
+          -e HF_HOME=/cache \
+          -e SENTENCE_TRANSFORMERS_HOME=/cache/sentence-transformers \
+          carepathai_ml \
+          python -m pytest tests/ -v
+    
+    - name: Run ingestion script in container
+      run: |
+        docker run --rm \
+          -v $(pwd)/carepath_ml:/app \
+          -v $(pwd)/ml_cache:/cache \
+          -e TRANSFORMERS_CACHE=/cache \
+          -e HF_HOME=/cache \
+          -e SENTENCE_TRANSFORMERS_HOME=/cache/sentence-transformers \
+          carepathai_ml \
+          python scripts/ingest_embeddings.py
+    
+    - name: Test ML service health endpoint
+      run: |
+        # Start the service in background
+        docker run -d --name ml-test \
+          -p 8000:8000 \
+          -v $(pwd)/carepath_ml:/app \
+          -v $(pwd)/ml_cache:/cache \
+          -e TRANSFORMERS_CACHE=/cache \
+          -e HF_HOME=/cache \
+          -e SENTENCE_TRANSFORMERS_HOME=/cache/sentence-transformers \
+          carepathai_ml
+        
+        # Wait for service to be ready
+        timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+        
+        # Test detailed health endpoint
+        curl -f http://localhost:8000/health/detailed
+        
+        # Cleanup
+        docker stop ml-test
+        docker rm ml-test
+
+  test-dotnet:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore
+    
+    - name: Test
+      run: dotnet test --no-build --verbosity normal

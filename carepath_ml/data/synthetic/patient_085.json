@@ -1,0 +1,11 @@
+{
+  "id": 85,
+  "firstName": "Maria",
+  "lastName": "Gonzalez",
+  "dateOfBirth": "1948-03-19",
+  "medicalRecordNumber": "MRN085",
+  "conditions": [
+    "pregnancy"
+  ],
+  "notes": "Patient has a history of pregnancy. Symptoms include ..."
+}

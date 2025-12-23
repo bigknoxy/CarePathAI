@@ -1,0 +1,12 @@
+{
+  "id": 100,
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "dateOfBirth": "1981-02-14",
+  "medicalRecordNumber": "MRN100",
+  "conditions": [
+    "diabetes",
+    "pregnancy"
+  ],
+  "notes": "Patient has a history of diabetes. Symptoms include ...\nPatient has a history of pregnancy. Symptoms include ..."
+}

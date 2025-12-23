@@ -1,0 +1,11 @@
+{
+  "id": 57,
+  "firstName": "Maria",
+  "lastName": "Smith",
+  "dateOfBirth": "1972-05-04",
+  "medicalRecordNumber": "MRN057",
+  "conditions": [
+    "diabetes"
+  ],
+  "notes": "Patient has a history of diabetes. Symptoms include ..."
+}

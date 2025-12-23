@@ -1,0 +1,11 @@
+{
+  "id": 61,
+  "firstName": "Alex",
+  "lastName": "Gonzalez",
+  "dateOfBirth": "1969-06-18",
+  "medicalRecordNumber": "MRN061",
+  "conditions": [
+    "anxiety"
+  ],
+  "notes": "Patient has a history of anxiety. Symptoms include ..."
+}

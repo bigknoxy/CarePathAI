@@ -1,0 +1,12 @@
+{
+  "id": 97,
+  "firstName": "Wei",
+  "lastName": "Khan",
+  "dateOfBirth": "1948-08-10",
+  "medicalRecordNumber": "MRN097",
+  "conditions": [
+    "depression",
+    "asthma"
+  ],
+  "notes": "Patient has a history of depression. Symptoms include ...\nPatient has a history of asthma. Symptoms include ..."
+}

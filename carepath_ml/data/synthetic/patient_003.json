@@ -1,0 +1,12 @@
+{
+  "id": 3,
+  "firstName": "John",
+  "lastName": "Khan",
+  "dateOfBirth": "1946-11-23",
+  "medicalRecordNumber": "MRN003",
+  "conditions": [
+    "asthma",
+    "hypertension"
+  ],
+  "notes": "Patient has a history of asthma. Symptoms include ...\nPatient has a history of hypertension. Symptoms include ..."
+}

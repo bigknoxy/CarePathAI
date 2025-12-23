@@ -1,0 +1,12 @@
+{
+  "id": 91,
+  "firstName": "Alex",
+  "lastName": "Patel",
+  "dateOfBirth": "1956-05-31",
+  "medicalRecordNumber": "MRN091",
+  "conditions": [
+    "depression",
+    "hypertension"
+  ],
+  "notes": "Patient has a history of depression. Symptoms include ...\nPatient has a history of hypertension. Symptoms include ..."
+}

@@ -6,12 +6,17 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - ml
       - db
+      - ml
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=db;Database=carepath;Username=carepath;Password=carepath
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ui:
     build:
@@ -26,16 +31,34 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=db;Database=carepath;Username=carepath;Password=carepath
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ml:
     build:
       context: .
-      dockerfile: CarePath.ML/Dockerfile
+      dockerfile: carepath_ml/Dockerfile.minimal
     ports:
       - "8000:8000"
     volumes:
-      - ./data:/data
+      - ./ml_cache:/cache:rw
+      - ./carepath_ml/data:/app/data
+    environment:
+      - TRANSFORMERS_CACHE=/cache
+      - HF_HOME=/cache
+      - SENTENCE_TRANSFORMERS_HOME=/cache/sentence-transformers
+      - CAREPATH_DATA_DIR=/app/data
+    user: "${UID:-1000}:${GID:-1000}"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health').read().decode())\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   db:
     image: postgres:15
@@ -47,14 +70,20 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   prometheus:
     image: prom/prometheus:latest
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'

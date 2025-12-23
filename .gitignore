@@ -92,3 +92,7 @@ appsettings.*.json
 !appsettings.json
 *.pfx
 *.p12
+
+# ML Cache
+ml_cache/
+*/ml_cache/

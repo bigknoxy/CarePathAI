@@ -1,0 +1,12 @@
+{
+  "id": 55,
+  "firstName": "Wei",
+  "lastName": "Khan",
+  "dateOfBirth": "1985-02-15",
+  "medicalRecordNumber": "MRN055",
+  "conditions": [
+    "hypertension",
+    "pregnancy"
+  ],
+  "notes": "Patient has a history of hypertension. Symptoms include ...\nPatient has a history of pregnancy. Symptoms include ..."
+}
