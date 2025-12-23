@@ -1,0 +1,29 @@
+flowchart LR
+  UI[Blazor UI]
+  API[CarePath.Api (.NET)]
+  ML[CarePath.ML (Python FastAPI)\n(Embeddings, Retrieval, RAG, Guardrails)]
+  PG[PostgreSQL (metadata)]
+  FAISS[FAISS files on disk]
+  OBS[Observability\n(OpenTelemetry, Metrics, Logs)]
+  LOG[Logging & Audit]
+
+  UI -->|HTTPS| API
+  API -->|REST/HTTP| ML
+  API -->|SQL| PG
+  ML -->|reads/writes| FAISS
+
+  OBS --- API
+  OBS --- ML
+  LOG --- API
+  LOG --- ML
+
+  subgraph Guardrails
+    direction TB
+    G1[Emergency Detection]
+    G2[PHI Redaction]
+    G3[Fallback Response]
+  end
+
+  ML --> Guardrails
+  classDef service fill:#f9f,stroke:#333,stroke-width:1px;
+  class API,ML service;
