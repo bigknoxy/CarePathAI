@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: CarePath.Api/Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - ml
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Database=carepath;Username=carepath;Password=carepath
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: .
+      dockerfile: CarePath.UI/Dockerfile
+    ports:
+      - "5001:5001"
+    depends_on:
+      - api
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Database=carepath;Username=carepath;Password=carepath
+    restart: unless-stopped
+
+  ml:
+    build:
+      context: .
+      dockerfile: CarePath.ML/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: carepath
+      POSTGRES_USER: carepath
+      POSTGRES_DB: carepath
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+
+volumes:
+  pgdata:
