@@ -1,180 +1,124 @@
+#!/usr/bin/env python3
+"""Main FastAPI application for CarePathAI ML service."""
+
 import logging
 import json
-import pickle
-from typing import Optional
+import os
 from pathlib import Path
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
+from carepath_ml.embeddings import load_model
+from carepath_ml.vector_store import load_index_if_exists
+from carepath_ml.endpoints.embed import create_embed_endpoint
+from carepath_ml.endpoints.retrieve import create_retrieve_endpoint
+from carepath_ml.endpoints.orchestrate import create_orchestrate_endpoint
+from carepath_ml.health import create_health_endpoint
 
-# Direct data paths without package dependencies
-def get_data_paths():
-    data_dir = Path("/data/synthetic")
-    index_dir = Path("/data/faiss")
-    return data_dir, index_dir
-
-
-app = FastAPI(title="CarePath ML Service", version="1.0.0")
 logger = logging.getLogger(__name__)
 
-# Global state
-USE_FAISS = False
-FAISS_INDEX = None
-METADATA_LIST = None
-MOCK_INDEX = None
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager - handles startup and shutdown."""
+    # Startup logic
+    logger.info("Starting CarePath ML Service...")
 
-class QueryRequest(BaseModel):
-    query: str
-    top_k: Optional[int] = 5
-
-
-class QueryResponse(BaseModel):
-    results: list[dict]
-
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
-
-
-@app.get("/health/detailed")
-async def health_detailed():
-    """Detailed health check including system state and index status."""
-    global USE_FAISS, FAISS_INDEX, METADATA_LIST, MOCK_INDEX
-
-    health_info = {
-        "status": "ok",
-        "service": "CarePath ML Service",
-        "version": "1.0.0",
-        "indices": {
-            "faiss_available": USE_FAISS,
-            "faiss_loaded": FAISS_INDEX is not None,
-            "metadata_count": len(METADATA_LIST) if METADATA_LIST else 0,
-            "mock_index_loaded": MOCK_INDEX is not None,
-            "mock_index_count": len(MOCK_INDEX["metadata"]) if MOCK_INDEX else 0,
-        },
-        "model": {"name": "basic", "loaded": True},
-        "paths": {
-            "data_dir": str(get_data_paths()[0]),
-            "index_dir": str(get_data_paths()[1]),
-        },
-    }
-
-    return health_info
-
-
-def load_metadata():
-    """Load metadata from JSON file."""
-    global METADATA_LIST
-    try:
-        data_dir, index_dir = get_data_paths()
-        metadata_path = index_dir / "metadata.json"
-
-        if metadata_path.exists():
-            with open(metadata_path, "r") as f:
-                METADATA_LIST = json.load(f)
-            logger.info(f"Loaded {len(METADATA_LIST)} metadata entries")
-        else:
-            logger.warning(f"Metadata file not found at {metadata_path}")
-            METADATA_LIST = []
-    except Exception as e:
-        logger.error(f"Failed to load metadata: {e}")
-        METADATA_LIST = []
-
-
-def load_mock_index():
-    """Load TF-IDF mock index if available."""
-    global MOCK_INDEX
-    try:
-        data_dir, index_dir = get_data_paths()
-        mock_path = index_dir / "patient_index.mock"
-
-        if mock_path.exists():
-            with open(mock_path, "rb") as f:
-                MOCK_INDEX = pickle.load(f)
-            logger.info(
-                f"Loaded TF-IDF mock index with {len(MOCK_INDEX['metadata'])} documents"
-            )
-            return True
-        else:
-            logger.warning(f"Mock index not found at {mock_path}")
-            return False
-    except Exception as e:
-        logger.error(f"Failed to load mock index: {e}")
-        return False
-
-
-def search_tfidf(query: str, top_k: int = 5) -> list[dict]:
-    """Search using TF-IDF fallback."""
-    global MOCK_INDEX
-
-    if MOCK_INDEX is None:
-        logger.warning("Mock index not available, returning empty results")
-        return []
-
-    try:
-        # Simple keyword search as fallback
-        metadata = MOCK_INDEX["metadata"]
-        query_lower = query.lower()
-
-        results = []
-        for meta in metadata:
-            # Simple text matching in patient data
-            match_score = 0
-            for key, value in meta.items():
-                if isinstance(value, str) and query_lower in value.lower():
-                    match_score += 1
-
-            if match_score > 0:
-                results.append(
-                    {
-                        "id": meta.get("id"),
-                        "mrn": meta.get("mrn"),
-                        "score": float(match_score),
-                        "snippet": f"Matched {match_score} fields for patient {meta.get('id')}",
-                    }
-                )
-
-        # Sort by score and take top_k
-        results.sort(key=lambda x: x["score"], reverse=True)
-        results = results[:top_k]
-
-        logger.info(f"Keyword search returned {len(results)} results")
-        return results
-
-    except Exception as e:
-        logger.error(f"Search failed: {e}")
-        return []
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize global state on application startup."""
     # Configure logging
-    logging.basicConfig(level=logging.INFO)
-
-    # Load metadata and mock index
-    load_metadata()
-    load_mock_index()
-
-    logger.info(
-        f"Startup complete - USE_FAISS={USE_FAISS}, FAISS_INDEX loaded={FAISS_INDEX is not None}"
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
+    # Get data directory
+    data_dir = Path(os.environ.get("CAREPATH_DATA_DIR", "/app/data"))
+    index_dir = data_dir / "faiss"
 
-@app.post("/retrieve")
-async def retrieve(request: QueryRequest):
-    """Retrieve documents based on query."""
-    top_k = request.top_k or 5
+    logger.info(f"Using data directory: {data_dir}")
 
-    logger.info(f"Retrieving using keyword search (top_k={top_k})")
-    results = search_tfidf(request.query, top_k)
+    try:
+        # Load embedding model (singleton pattern)
+        logger.info("Loading embedding model...")
+        model = load_model()
+        app.state.model = model
+        logger.info(f"Model loaded successfully: {type(model).__name__}")
 
-    return QueryResponse(results=results)
+    except Exception as e:
+        logger.error(f"Failed to load model: {e}")
+        app.state.model = None
+
+    try:
+        # Load FAISS index if exists
+        logger.info("Loading FAISS index...")
+        index = load_index_if_exists(index_dir / "patient_index.faiss")
+        if index is not None:
+            app.state.index = index
+            logger.info(f"FAISS index loaded with {index.ntotal} vectors")
+        else:
+            app.state.index = None
+            logger.warning("FAISS index not found, retrieval will be limited")
+
+    except Exception as e:
+        logger.error(f"Failed to load index: {e}")
+        app.state.index = None
+
+    try:
+        # Load metadata
+        metadata_path = index_dir / "metadata.json"
+        if metadata_path.exists():
+            with open(metadata_path, "r") as f:
+                metadata = json.load(f)
+            app.state.metadata = metadata
+            logger.info(f"Metadata loaded: {len(metadata)} entries")
+        else:
+            app.state.metadata = []
+            logger.warning(f"Metadata file not found: {metadata_path}")
+
+    except Exception as e:
+        logger.error(f"Failed to load metadata: {e}")
+        app.state.metadata = []
+
+    logger.info("Startup complete")
+
+    yield
+
+    # Shutdown logic
+    logger.info("Shutting down CarePath ML Service...")
+
+
+# Create FastAPI app
+app = FastAPI(
+    title="CarePath AI ML Service",
+    description="Healthcare AI service for embeddings, retrieval, and care orchestration",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount routes
+app.include_router(create_health_endpoint(app), prefix="/api/v1")
+app.include_router(create_embed_endpoint(app), prefix="/api/v1")
+app.include_router(create_retrieve_endpoint(app), prefix="/api/v1")
+app.include_router(create_orchestrate_endpoint(app), prefix="/api/v1")
+
+
+# Legacy compatibility routes (non-prefixed)
+@app.get("/health")
+async def health_legacy():
+    """Legacy health endpoint for backward compatibility."""
+    return {"status": "ok", "service": "CarePath ML Service"}
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

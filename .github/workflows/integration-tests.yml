@@ -1,0 +1,212 @@
+name: CarePathAI Integration Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    services:
+      docker:
+        image: docker:24.0.7
+        options: --privileged
+        ports:
+          - 2376:2376
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Create ml_cache directory and set permissions
+      run: |
+        echo "Creating ml_cache directory with proper permissions..."
+        mkdir -p ml_cache
+        chmod 777 ml_cache
+        # Create workspace data directory for CI
+        mkdir -p .workspace/data
+        chmod 777 .workspace/data
+
+    - name: Build carepath_ml image
+      run: |
+        echo "Building carepath_ml Docker image..."
+        docker build \
+          --build-arg UID=1001 \
+          --build-arg GID=1001 \
+          -f carepath_ml/Dockerfile \
+          -t carepath_ml:latest \
+          .
+
+    - name: Create docker-compose override for CI
+      run: |
+        cat > docker-compose.override.yml << 'EOF'
+        version: '3.8'
+        services:
+          ml:
+            volumes:
+              - ./ml_cache:/cache:rw
+              - ./.workspace/data:/app/data:rw
+            environment:
+              - TRANSFORMERS_CACHE=/cache
+              - HF_HOME=/cache
+              - SENTENCE_TRANSFORMERS_HOME=/cache/sentence-transformers
+              - CAREPATH_DATA_DIR=/app/data
+              - PYTHONUNBUFFERED=1
+            user: "1001:1001"
+        EOF
+
+    - name: Build and start services
+      run: |
+        echo "Building all services with no cache..."
+        docker compose build --no-cache
+        echo "Starting services in detached mode..."
+        docker compose up -d
+
+    - name: Wait for services to be healthy
+      run: |
+        echo "Waiting for services to be ready..."
+        
+        # Wait for database first
+        echo "Waiting for PostgreSQL..."
+        timeout 90 bash -c 'until docker compose exec -T db pg_isready -U $POSTGRES_USER -d $POSTGRES_DB; do
+          echo "Waiting for DB..."
+          sleep 5
+        done'
+        
+        # Wait for ML service
+        echo "Waiting for ML service..."
+        timeout 120 bash -c 'until curl -f http://localhost:8000/health 2>/dev/null; do
+          echo "Waiting for ML service..."
+          sleep 5
+        done'
+        
+        # Wait for API service
+        echo "Waiting for API service..."
+        timeout 90 bash -c 'until curl -f http://localhost:5000/health 2>/dev/null; do
+          echo "Waiting for API service..."
+          sleep 5
+        done'
+        
+        # Wait for UI service (optional but good to verify)
+        echo "Waiting for UI service..."
+        timeout 90 bash -c 'until curl -f http://localhost:5001/health 2>/dev/null; do
+          echo "Waiting for UI service..."
+          sleep 5
+        done'
+        
+        echo "✅ All services are healthy!"
+        docker compose ps
+
+    - name: Set up Python environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install pytest and requirements
+      run: |
+        pip install pytest pytest-json-report
+        # Install any test requirements if they exist
+        if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
+
+    - name: Run integration tests with pytest
+      env:
+        CAREPATH_DATA_DIR: /home/runner/work/CarePathAI/CarePathAI/.workspace/data
+        API_BASE_URL: http://localhost:5000
+        ML_BASE_URL: http://localhost:8000
+      run: |
+        echo "Running integration tests with pytest..."
+        mkdir -p .integration-logs
+        
+        # Run pytest with JSON reporting
+        pytest tests/integration/ \
+          -m integration \
+          --json-report \
+          --json-report-file=.integration-logs/pytest_integration_report.json \
+          --verbose \
+          --tb=short \
+          | tee .integration-logs/pytest_output.txt
+        
+        # Save exit code for artifact upload regardless of test result
+        TEST_EXIT_CODE=$?
+        
+        # Copy additional logs
+        docker compose logs --no-color > .integration-logs/docker_compose_logs.txt
+        
+        if [ $TEST_EXIT_CODE -eq 0 ]; then
+          echo "✅ All integration tests passed!"
+        else
+          echo "❌ Some integration tests failed!"
+          echo "Check artifacts for detailed logs."
+          exit 1
+        fi
+
+    - name: Generate integration summary
+      if: always()
+      run: |
+        cat > .integration-logs/SUMMARY.md << 'EOF'
+        # Integration Test Summary
+        
+        This artifact contains:
+        
+        - `pytest_integration_report.json`: Structured test results with metadata
+        - `pytest_output.txt`: Full pytest console output
+        - `docker_compose_logs.txt`: Complete Docker service logs
+        - `SUMMARY.md`: This summary file
+        
+        ## Viewing Results
+        
+        1. Download the `integration-test-results` artifact from the GitHub Actions run
+        2. Open `pytest_integration_report.json` for structured test data
+        3. Check `pytest_output.txt` for detailed test execution logs
+        4. Review `docker_compose_logs.txt` for service logs if tests failed
+        
+        ## Environment Variables Used
+        
+        - `CAREPATH_DATA_DIR`: Set to `.workspace/data` in CI runner
+        - `API_BASE_URL`: http://localhost:5000
+        - `ML_BASE_URL`: http://localhost:8000
+        EOF
+
+    - name: Upload integration test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: .integration-logs/
+        retention-days: 30
+
+    - name: Display service status
+      if: always()
+      run: |
+        echo "=== Container Status ==="
+        docker compose ps
+        echo "=== Service Health ==="
+        docker compose exec -T db pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || echo "DB: Not ready"
+        curl -f http://localhost:8000/health && echo "ML: Healthy" || echo "ML: Not healthy"
+        curl -f http://localhost:5000/health && echo "API: Healthy" || echo "API: Not healthy"
+        curl -f http://localhost:5001/health && echo "UI: Healthy" || echo "UI: Not healthy"
+
+    - name: Display error logs on failure
+      if: failure()
+      run: |
+        echo "=== Recent Docker Compose Logs ==="
+        docker compose logs --tail=100
+        echo "=== Container Resource Usage ==="
+        docker stats --no-stream || true
+
+    - name: Cleanup services
+      if: always()
+      run: |
+        echo "Cleaning up services..."
+        docker compose down -v --remove-orphans
+        docker system prune -f
+        # Clean up workspace directories
+        rm -rf .workspace ml_cache

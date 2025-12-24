@@ -20,6 +20,30 @@ get_data_paths = data_paths.get_data_paths
 app = FastAPI(title="CarePath ML Service", version="1.0.0")
 logger = logging.getLogger(__name__)
 
+# Import the new endpoints dynamically
+import importlib.util
+from pathlib import Path
+
+# Load embed endpoint
+embed_path = Path(__file__).parent / "endpoints" / "embed.py"
+embed_spec = importlib.util.spec_from_file_location("embed_endpoint", embed_path)
+if embed_spec is None or embed_spec.loader is None:
+    raise ImportError("Could not load embed endpoint")
+embed_module = importlib.util.module_from_spec(embed_spec)
+embed_spec.loader.exec_module(embed_module)
+embed_router = embed_module.router
+
+# Load orchestrate endpoint
+orchestrate_path = Path(__file__).parent / "endpoints" / "orchestrate.py"
+orchestrate_spec = importlib.util.spec_from_file_location(
+    "orchestrate_endpoint", orchestrate_path
+)
+if orchestrate_spec is None or orchestrate_spec.loader is None:
+    raise ImportError("Could not load orchestrate endpoint")
+orchestrate_module = importlib.util.module_from_spec(orchestrate_spec)
+orchestrate_spec.loader.exec_module(orchestrate_module)
+orchestrate_router = orchestrate_module.router
+
 # Global state for index usage
 USE_FAISS = False
 FAISS_INDEX = None
@@ -300,7 +324,7 @@ def search_tfidf(query: str, top_k: int = 5) -> list[dict]:
 @app.on_event("startup")
 async def startup_event():
     """Initialize global state on application startup."""
-    global USE_FAISS, FAISS_INDEX
+    global USE_FAISS, FAISS_INDEX, METADATA_LIST
 
     # Configure logging
     logging.basicConfig(level=logging.INFO)
@@ -311,6 +335,15 @@ async def startup_event():
     # Load metadata and mock index
     load_metadata()
     load_mock_index()
+
+    # Store model and index in app.state for new endpoints
+    app.state.model = get_model()
+    app.state.index = FAISS_INDEX
+    app.state.metadata = METADATA_LIST
+
+    # Include new API endpoints
+    app.include_router(embed_router)
+    app.include_router(orchestrate_router)
 
     logger.info(
         f"Startup complete - USE_FAISS={USE_FAISS}, FAISS_INDEX loaded={FAISS_INDEX is not None}"

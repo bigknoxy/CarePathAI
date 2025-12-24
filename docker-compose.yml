@@ -40,7 +40,7 @@ services:
   ml:
     build:
       context: .
-      dockerfile: carepath_ml/Dockerfile.minimal
+      dockerfile: carepath_ml/Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -53,6 +53,7 @@ services:
       - CAREPATH_DATA_DIR=/app/data
     user: "${UID:-1000}:${GID:-1000}"
     restart: unless-stopped
+    command: ["python", "/app/basic_main.py"]
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health').read().decode())\""]
       interval: 10s
