@@ -10,7 +10,7 @@ services:
       - ml
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=db;Database=carepath;Username=carepath;Password=carepath
+      - ConnectionStrings__DefaultConnection=Host=db;Database=carepath;Username=carepath;Password=${DB_PASSWORD}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
@@ -29,7 +29,7 @@ services:
       - db
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=db;Database=carepath;Username=carepath;Password=carepath
+      - ConnectionStrings__DefaultConnection=Host=db;Database=carepath;Username=carepath;Password=${DB_PASSWORD}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
@@ -64,7 +64,7 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_PASSWORD: carepath
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: carepath
       POSTGRES_DB: carepath
     ports:
