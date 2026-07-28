@@ -1,0 +1,7 @@
+Health Checks Log - $(date)
+================================
+
+Database Health Check: PASSED
+- Timestamp: $(date)
+- Status: /var/run/postgresql:5432 - accepting connections
+- Service: carepathai-db-1

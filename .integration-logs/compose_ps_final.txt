@@ -1,0 +1,6 @@
+NAME                      IMAGE                    COMMAND                  SERVICE      CREATED          STATUS                      PORTS
+carepathai-api-1          carepathai-api           "dotnet CarePath.Api…"   api          36 minutes ago   Up 36 minutes (unhealthy)   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp
+carepathai-db-1           postgres:15              "docker-entrypoint.s…"   db           36 minutes ago   Up 36 minutes (healthy)     0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+carepathai-ml-1           carepathai-ml            "python /app/basic_m…"   ml           20 minutes ago   Up 20 minutes (healthy)     0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+carepathai-prometheus-1   prom/prometheus:latest   "/bin/prometheus --c…"   prometheus   36 minutes ago   Up 36 minutes               0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp
+carepathai-ui-1           carepathai-ui            "dotnet CarePath.UI.…"   ui           36 minutes ago   Up 36 minutes (unhealthy)   0.0.0.0:5001->5001/tcp, [::]:5001->5001/tcp

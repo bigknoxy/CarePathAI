@@ -1,0 +1,41 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-9.0.2, pluggy-1.6.0
+rootdir: /home/josh/projects/CarePathAI
+configfile: pytest.ini
+plugins: anyio-3.6.2
+collected 31 items / 7 deselected / 24 selected
+
+carepath_ml/tests/test_embed.py ..............                           [ 58%]
+carepath_ml/tests/test_orchestrate.py ..........                         [100%]
+
+=============================== warnings summary ===============================
+carepath_ml/tests/test_orchestrate.py:74
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+carepath_ml/tests/test_orchestrate.py:98
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:98: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+carepath_ml/tests/test_orchestrate.py:111
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+carepath_ml/tests/test_orchestrate.py:125
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+carepath_ml/tests/test_orchestrate.py:136
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:136: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+carepath_ml/tests/test_orchestrate.py:163
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:163: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+carepath_ml/tests/test_orchestrate.py:177
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:177: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 24 passed, 7 deselected, 7 warnings in 1.23s =================

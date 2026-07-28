@@ -1,0 +1,108 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-9.0.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/josh/projects/CarePathAI
+configfile: pytest.ini
+plugins: asyncio-1.3.0, anyio-3.6.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 23 items
+
+tests/integration/test_carepath_services.py::TestMLServiceHealth::test_basic_health PASSED [  4%]
+tests/integration/test_carepath_services.py::TestMLServiceHealth::test_detailed_health PASSED [  8%]
+tests/integration/test_carepath_services.py::TestMLEmbedEndpoint::test_embed_endpoint_availability PASSED [ 13%]
+tests/integration/test_carepath_services.py::TestMLEmbedEndpoint::test_embed_single_text SKIPPED [ 17%]
+tests/integration/test_carepath_services.py::TestMLEmbedEndpoint::test_embed_status_and_metadata SKIPPED [ 21%]
+tests/integration/test_carepath_services.py::TestMLRetrieveEndpoint::test_retrieve_basic PASSED [ 26%]
+tests/integration/test_carepath_services.py::TestMLRetrieveEndpoint::test_retrieve_with_top_k PASSED [ 30%]
+tests/integration/test_carepath_services.py::TestMLRetrieveEndpoint::test_retrieve_result_structure PASSED [ 34%]
+tests/integration/test_carepath_services.py::TestMLRetrieveEndpoint::test_retrieve_empty_query PASSED [ 39%]
+tests/integration/test_carepath_services.py::TestMLOrchestrateEndpoint::test_orchestrate_endpoint_availability PASSED [ 43%]
+tests/integration/test_carepath_services.py::TestMLOrchestrateEndpoint::test_orchestrate_patient_flow SKIPPED [ 47%]
+tests/integration/test_carepath_services.py::TestAPIServiceHealth::test_api_health PASSED [ 52%]
+tests/integration/test_carepath_services.py::TestAPIPatientEndpoints::test_get_all_patients PASSED [ 56%]
+tests/integration/test_carepath_services.py::TestAPIPatientEndpoints::test_get_specific_patient_not_found PASSED [ 60%]
+tests/integration/test_carepath_services.py::TestAPIPatientEndpoints::test_get_specific_patient_exists PASSED [ 65%]
+tests/integration/test_carepath_services.py::TestCrossServiceIntegration::test_both_services_healthy PASSED [ 69%]
+tests/integration/test_carepath_services.py::TestCrossServiceIntegration::test_service_connectivity PASSED [ 73%]
+tests/integration/test_carepath_services.py::TestErrorHandling::test_ml_service_invalid_endpoint PASSED [ 78%]
+tests/integration/test_carepath_services.py::TestErrorHandling::test_ml_service_invalid_method PASSED [ 82%]
+tests/integration/test_carepath_services.py::TestErrorHandling::test_api_service_invalid_endpoint PASSED [ 86%]
+tests/integration/test_carepath_services.py::TestErrorHandling::test_malformed_json_request PASSED [ 91%]
+tests/integration/test_carepath_services.py::TestPerformanceBaseline::test_ml_health_response_time PASSED [ 95%]
+tests/integration/test_carepath_services.py::TestPerformanceBaseline::test_retrieve_response_time PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/integration/test_carepath_services.py:24
+  /home/josh/projects/CarePathAI/tests/integration/test_carepath_services.py:24: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytestmark = pytest.mark.integration
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=================== 20 passed, 3 skipped, 1 warning in 0.47s ===================
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-9.0.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/josh/projects/CarePathAI
+configfile: pytest.ini
+plugins: asyncio-1.3.0, anyio-3.6.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 18 items
+
+tests/integration/test_pytest_integration.py::TestMLServiceHealth::test_basic_health PASSED [  5%]
+tests/integration/test_pytest_integration.py::TestMLServiceHealth::test_detailed_health PASSED [ 11%]
+tests/integration/test_pytest_integration.py::TestMLRetrieveEndpoint::test_retrieve_basic PASSED [ 16%]
+tests/integration/test_pytest_integration.py::TestMLRetrieveEndpoint::test_retrieve_with_top_k PASSED [ 22%]
+tests/integration/test_pytest_integration.py::TestMLRetrieveEndpoint::test_retrieve_result_structure PASSED [ 27%]
+tests/integration/test_pytest_integration.py::TestMLRetrieveEndpoint::test_retrieve_empty_query PASSED [ 33%]
+tests/integration/test_pytest_integration.py::TestMLEmbedEndpoint::test_embed_endpoint_availability PASSED [ 38%]
+tests/integration/test_pytest_integration.py::TestMLEmbedEndpoint::test_embed_single_text SKIPPED [ 44%]
+tests/integration/test_pytest_integration.py::TestMLOrchestrateEndpoint::test_orchestrate_endpoint_availability PASSED [ 50%]
+tests/integration/test_pytest_integration.py::TestMLOrchestrateEndpoint::test_orchestrate_patient_flow SKIPPED [ 55%]
+tests/integration/test_pytest_integration.py::TestAPIServiceHealth::test_api_health PASSED [ 61%]
+tests/integration/test_pytest_integration.py::TestAPIPatientEndpoints::test_get_all_patients PASSED [ 66%]
+tests/integration/test_pytest_integration.py::TestAPIPatientEndpoints::test_get_specific_patient_not_found PASSED [ 72%]
+tests/integration/test_pytest_integration.py::TestAPIPatientEndpoints::test_get_specific_patient_exists PASSED [ 77%]
+tests/integration/test_pytest_integration.py::TestCrossServiceIntegration::test_both_services_healthy PASSED [ 83%]
+tests/integration/test_pytest_integration.py::TestCrossServiceIntegration::test_service_connectivity PASSED [ 88%]
+tests/integration/test_pytest_integration.py::TestPerformanceBaseline::test_ml_health_response_time PASSED [ 94%]
+tests/integration/test_pytest_integration.py::TestPerformanceBaseline::test_retrieve_response_time PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/integration/test_pytest_integration.py:20
+  /home/josh/projects/CarePathAI/tests/integration/test_pytest_integration.py:20: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytestmark = pytest.mark.integration
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=================== 16 passed, 2 skipped, 1 warning in 0.23s ===================
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-9.0.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/josh/projects/CarePathAI
+configfile: pytest.ini
+plugins: asyncio-1.3.0, anyio-3.6.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 22 items
+
+tests/integration/test_integration.py::TestMLServiceHealth::test_basic_health PASSED [  4%]
+tests/integration/test_integration.py::TestMLServiceHealth::test_detailed_health PASSED [  9%]
+tests/integration/test_integration.py::TestMLEmbedEndpoint::test_embed_endpoint_availability PASSED [ 13%]
+tests/integration/test_integration.py::TestMLEmbedEndpoint::test_embed_single_text_if_available PASSED [ 18%]
+tests/integration/test_integration.py::TestMLRetrieveEndpoint::test_retrieve_basic PASSED [ 22%]
+tests/integration/test_integration.py::TestMLRetrieveEndpoint::test_retrieve_with_top_k PASSED [ 27%]
+tests/integration/test_integration.py::TestMLRetrieveEndpoint::test_retrieve_result_structure PASSED [ 31%]
+tests/integration/test_integration.py::TestMLRetrieveEndpoint::test_retrieve_empty_query PASSED [ 36%]
+tests/integration/test_integration.py::TestMLOrchestrateEndpoint::test_orchestrate_endpoint_availability PASSED [ 40%]
+tests/integration/test_integration.py::TestMLOrchestrateEndpoint::test_orchestrate_patient_flow_if_available PASSED [ 45%]
+tests/integration/test_integration.py::TestAPIServiceHealth::test_api_health PASSED [ 50%]
+tests/integration/test_integration.py::TestAPIPatientEndpoints::test_get_all_patients PASSED [ 54%]
+tests/integration/test_integration.py::TestAPIPatientEndpoints::test_get_specific_patient_not_found PASSED [ 59%]
+tests/integration/test_integration.py::TestAPIPatientEndpoints::test_get_specific_patient_exists PASSED [ 63%]
+tests/integration/test_integration.py::TestCrossServiceIntegration::test_both_services_healthy PASSED [ 68%]
+tests/integration/test_integration.py::TestCrossServiceIntegration::test_service_connectivity PASSED [ 72%]
+tests/integration/test_integration.py::TestErrorHandling::test_ml_service_invalid_endpoint PASSED [ 77%]
+tests/integration/test_integration.py::TestErrorHandling::test_ml_service_invalid_method PASSED [ 81%]
+tests/integration/test_integration.py::TestErrorHandling::test_api_service_invalid_endpoint PASSED [ 86%]
+tests/integration/test_integration.py::TestErrorHandling::test_malformed_json_request PASSED [ 90%]
+tests/integration/test_integration.py::TestPerformanceBaseline::test_ml_health_response_time PASSED [ 95%]
+tests/integration/test_integration.py::TestPerformanceBaseline::test_retrieve_response_time PASSED [100%]
+
+============================== 22 passed in 0.23s ==============================

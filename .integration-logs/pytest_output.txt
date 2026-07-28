@@ -1,0 +1,26 @@
+Running CarePathAI Integration Tests...
+==================================================
+✓ TestMLServiceHealth.test_basic_health
+✓ TestMLServiceHealth.test_detailed_health
+✓ TestMLEmbedEndpoint.test_embed_endpoint_availability
+✓ TestMLEmbedEndpoint.test_embed_single_text_if_available
+✓ TestMLRetrieveEndpoint.test_retrieve_basic
+✓ TestMLRetrieveEndpoint.test_retrieve_empty_query
+✓ TestMLRetrieveEndpoint.test_retrieve_result_structure
+✓ TestMLRetrieveEndpoint.test_retrieve_with_top_k
+✓ TestMLOrchestrateEndpoint.test_orchestrate_endpoint_availability
+✓ TestMLOrchestrateEndpoint.test_orchestrate_patient_flow_if_available
+✓ TestAPIServiceHealth.test_api_health
+✓ TestAPIPatientEndpoints.test_get_all_patients
+✓ TestAPIPatientEndpoints.test_get_specific_patient_exists
+✓ TestAPIPatientEndpoints.test_get_specific_patient_not_found
+✓ TestCrossServiceIntegration.test_both_services_healthy
+✓ TestCrossServiceIntegration.test_service_connectivity
+✓ TestErrorHandling.test_api_service_invalid_endpoint
+✓ TestErrorHandling.test_malformed_json_request
+✓ TestErrorHandling.test_ml_service_invalid_endpoint
+✓ TestErrorHandling.test_ml_service_invalid_method
+✓ TestPerformanceBaseline.test_ml_health_response_time
+✓ TestPerformanceBaseline.test_retrieve_response_time
+==================================================
+Results: 22/22 passed

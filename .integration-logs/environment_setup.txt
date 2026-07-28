@@ -1,0 +1,3 @@
+CAREPATH_DATA_DIR=/home/josh/projects/CarePathAI/carepath_ml/data
+UID=1000
+GID=1000

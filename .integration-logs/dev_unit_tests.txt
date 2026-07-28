@@ -1,0 +1,148 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-9.0.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/josh/projects/CarePathAI
+configfile: pytest.ini
+plugins: anyio-3.6.2
+collecting ... collected 31 items / 7 deselected / 24 selected
+
+tests/test_embed.py::TestEmbedEndpoint::test_validate_embed_text_success PASSED [  4%]
+tests/test_embed.py::TestEmbedEndpoint::test_validate_embed_text_empty PASSED [  8%]
+tests/test_embed.py::TestEmbedEndpoint::test_validate_embed_text_too_long PASSED [ 12%]
+tests/test_embed.py::TestEmbedEndpoint::test_validate_embed_text_wrong_type PASSED [ 16%]
+tests/test_embed.py::TestEmbedEndpoint::test_generate_embedding_success PASSED [ 20%]
+tests/test_embed.py::TestEmbedEndpoint::test_generate_embedding_model_error PASSED [ 25%]
+tests/test_embed.py::TestEmbedEndpoint::test_embed_endpoint_success PASSED [ 29%]
+tests/test_embed.py::TestEmbedEndpoint::test_embed_endpoint_missing_text PASSED [ 33%]
+tests/test_embed.py::TestEmbedEndpoint::test_embed_endpoint_empty_text PASSED [ 37%]
+tests/test_embed.py::TestEmbedEndpoint::test_embed_endpoint_too_long_text PASSED [ 41%]
+tests/test_embed.py::TestEmbedEndpoint::test_embed_endpoint_no_model PASSED [ 45%]
+tests/test_embed.py::TestEmbedEndpoint::test_embed_endpoint_lazy_load_model PASSED [ 50%]
+tests/test_embed.py::TestEmbedEndpoint::test_embed_endpoint_model_no_dimension_method PASSED [ 54%]
+tests/test_embed.py::TestEmbedEndpoint::test_embed_endpoint_unexpected_error PASSED [ 58%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_get_api_base_url_default PASSED [ 62%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_get_api_base_url_env_var PASSED [ 66%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_success PASSED [ 70%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_missing_patient_id PASSED [ 75%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_invalid_patient_id PASSED [ 79%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_invalid_top_k PASSED [ 83%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_patient_not_found FAILED [ 87%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_downstream_error FAILED [ 91%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_default_values FAILED [ 95%]
+tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_flexible_patient_mapping PASSED [100%]
+
+=================================== FAILURES ===================================
+_____ TestOrchestrateEndpoint.test_orchestrate_endpoint_patient_not_found ______
+
+self = <test_orchestrate.TestOrchestrateEndpoint object at 0x7f72685cce10>
+
+    def test_orchestrate_endpoint_patient_not_found(self):
+        """Test orchestrate endpoint when patient not found."""
+        with patch(
+            "endpoints.orchestrate.fetch_patient_from_csharp_api",
+            new_callable=AsyncMock,
+        ) as mock_fetch:
+            mock_fetch.side_effect = RuntimeError("Patient 123 not found")
+    
+            response = self.client.post(
+                "/api/v1/orchestrate", json={"patient_id": 123, "top_k": 5}
+            )
+    
+            assert response.status_code == 404
+>           assert "error" in response.json()
+E           AssertionError: assert 'error' in {'detail': {'error': 'Patient 123 not found'}}
+E            +  where {'detail': {'error': 'Patient 123 not found'}} = json()
+E            +    where json = <Response [404 Not Found]>.json
+
+tests/test_orchestrate.py:260: AssertionError
+______ TestOrchestrateEndpoint.test_orchestrate_endpoint_downstream_error ______
+
+self = <test_orchestrate.TestOrchestrateEndpoint object at 0x7f72685cfa10>
+
+    def test_orchestrate_endpoint_downstream_error(self):
+        """Test orchestrate endpoint when C# API has downstream error."""
+        with patch(
+            "endpoints.orchestrate.fetch_patient_from_csharp_api",
+            new_callable=AsyncMock,
+        ) as mock_fetch:
+            mock_fetch.side_effect = RuntimeError("C# API error: 500")
+    
+            response = self.client.post(
+                "/api/v1/orchestrate", json={"patient_id": 123, "top_k": 5}
+            )
+    
+            assert response.status_code == 502
+>           assert "error" in response.json()
+E           AssertionError: assert 'error' in {'detail': {'error': 'Downstream service error: C# API error: 500'}}
+E            +  where {'detail': {'error': 'Downstream service error: C# API error: 500'}} = json()
+E            +    where json = <Response [502 Bad Gateway]>.json
+
+tests/test_orchestrate.py:276: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    endpoints.orchestrate:orchestrate.py:241 C# API error for patient 123: C# API error: 500
+_______ TestOrchestrateEndpoint.test_orchestrate_endpoint_default_values _______
+
+self = <test_orchestrate.TestOrchestrateEndpoint object at 0x7f72685f4f50>
+
+    def test_orchestrate_endpoint_default_values(self):
+        """Test orchestrate endpoint with default values."""
+        mock_patient_data = {"id": 123, "firstName": "John", "lastName": "Doe"}
+    
+        with (
+            patch(
+                "endpoints.orchestrate.fetch_patient_from_csharp_api",
+                new_callable=AsyncMock,
+            ) as mock_fetch,
+            patch(
+                "endpoints.orchestrate.perform_retrieval", new_callable=AsyncMock
+            ) as mock_retrieve,
+        ):
+            mock_fetch.return_value = mock_patient_data
+            mock_retrieve.return_value = []
+    
+            # Only provide patient_id, should use default top_k=5
+            response = self.client.post("/api/v1/orchestrate", json={"patient_id": 123})
+    
+            assert response.status_code == 200
+            mock_retrieve.assert_called_once_with(
+>               123, 5, mock_fetch.return_value.request
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            )
+E           AttributeError: 'dict' object has no attribute 'request'
+
+tests/test_orchestrate.py:300: AttributeError
+=============================== warnings summary ===============================
+tests/test_orchestrate.py:74
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_orchestrate.py:98
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:98: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_orchestrate.py:111
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_orchestrate.py:125
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_orchestrate.py:136
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:136: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_orchestrate.py:163
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:163: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/test_orchestrate.py:177
+  /home/josh/projects/CarePathAI/carepath_ml/tests/test_orchestrate.py:177: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_patient_not_found
+FAILED tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_downstream_error
+FAILED tests/test_orchestrate.py::TestOrchestrateEndpoint::test_orchestrate_endpoint_default_values
+============ 3 failed, 21 passed, 7 deselected, 7 warnings in 1.12s ============
