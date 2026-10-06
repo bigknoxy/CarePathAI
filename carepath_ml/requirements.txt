@@ -2,7 +2,7 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pytest==7.4.3
 httpx==0.25.2
-sentence-transformers==2.2.2
+sentence-transformers==5.6.0
 faiss-cpu==1.11.0
 numpy==1.26.4
 pydantic==1.10.12
